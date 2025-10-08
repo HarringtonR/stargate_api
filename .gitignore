@@ -1,0 +1,41 @@
+# Visual Studio
+.vs/
+
+# Build output
+bin/
+obj/
+
+# User-specific files
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# SQLite database
+starbase.db
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Others
+*.swp
+*.tmp
+*.bak
+
+# NuGet packages
+*.nupkg
+packages/
+
+# Test results
+TestResults/
+
+# IDE settings
+.idea/
+.vscode/
+
+# ASP.NET secrets
+secrets.json
