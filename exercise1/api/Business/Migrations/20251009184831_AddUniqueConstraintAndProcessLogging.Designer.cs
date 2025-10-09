@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using StargateAPI.Business.Data;
 
@@ -10,9 +11,11 @@ using StargateAPI.Business.Data;
 namespace StargateAPI.Migrations
 {
     [DbContext(typeof(StargateContext))]
-    partial class StargateContextModelSnapshot : ModelSnapshot
+    [Migration("20251009184831_AddUniqueConstraintAndProcessLogging")]
+    partial class AddUniqueConstraintAndProcessLogging
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "8.0.4");
@@ -45,7 +48,7 @@ namespace StargateAPI.Migrations
                     b.HasIndex("PersonId")
                         .IsUnique();
 
-                    b.ToTable("AstronautDetail", (string)null);
+                    b.ToTable("AstronautDetail");
                 });
 
             modelBuilder.Entity("StargateAPI.Business.Data.AstronautDuty", b =>
@@ -75,7 +78,7 @@ namespace StargateAPI.Migrations
 
                     b.HasIndex("PersonId");
 
-                    b.ToTable("AstronautDuty", (string)null);
+                    b.ToTable("AstronautDuty");
                 });
 
             modelBuilder.Entity("StargateAPI.Business.Data.Person", b =>
@@ -93,7 +96,7 @@ namespace StargateAPI.Migrations
                     b.HasIndex("Name")
                         .IsUnique();
 
-                    b.ToTable("Person", (string)null);
+                    b.ToTable("Person");
                 });
 
             modelBuilder.Entity("StargateAPI.Business.Data.ProcessLog", b =>
@@ -141,7 +144,7 @@ namespace StargateAPI.Migrations
 
                     b.HasIndex("Timestamp");
 
-                    b.ToTable("ProcessLog", (string)null);
+                    b.ToTable("ProcessLog");
                 });
 
             modelBuilder.Entity("StargateAPI.Business.Data.AstronautDetail", b =>

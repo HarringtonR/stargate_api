@@ -20,28 +20,23 @@ namespace StargateAPI.Business.Data
         {
             modelBuilder.ApplyConfigurationsFromAssembly(typeof(StargateContext).Assembly);
 
-            //SeedData(modelBuilder);
+            SeedData(modelBuilder);
 
             base.OnModelCreating(modelBuilder);
         }
 
         private static void SeedData(ModelBuilder modelBuilder)
         {
-            //add seed data
+            // Seed Person data
             modelBuilder.Entity<Person>()
                 .HasData(
-                    new Person
-                    {
-                        Id = 1,
-                        Name = "John Doe"
-                    },
-                    new Person
-                    {
-                        Id = 2,
-                        Name = "Jane Doe"
-                    }
+                    new Person { Id = 1, Name = "John Doe" },
+                    new Person { Id = 2, Name = "Jane Doe" },
+                    new Person { Id = 3, Name = "Samantha Carter" },
+                    new Person { Id = 4, Name = "Daniel Jackson" }
                 );
 
+            // Seed AstronautDetail data
             modelBuilder.Entity<AstronautDetail>()
                 .HasData(
                     new AstronautDetail
@@ -50,19 +45,58 @@ namespace StargateAPI.Business.Data
                         PersonId = 1,
                         CurrentRank = "1LT",
                         CurrentDutyTitle = "Commander",
-                        CareerStartDate = DateTime.Now
+                        CareerStartDate = new DateTime(2010, 1, 1),
+                        CareerEndDate = null
+                    },
+                    new AstronautDetail
+                    {
+                        Id = 2,
+                        PersonId = 3,
+                        CurrentRank = "Major",
+                        CurrentDutyTitle = "Science Officer",
+                        CareerStartDate = new DateTime(2012, 5, 15),
+                        CareerEndDate = null
                     }
                 );
 
+            // Seed AstronautDuty data
             modelBuilder.Entity<AstronautDuty>()
                 .HasData(
                     new AstronautDuty
                     {
                         Id = 1,
                         PersonId = 1,
-                        DutyStartDate = DateTime.Now,
+                        Rank = "1LT",
                         DutyTitle = "Commander",
-                        Rank = "1LT"
+                        DutyStartDate = new DateTime(2010, 1, 1),
+                        DutyEndDate = new DateTime(2015, 12, 31)
+                    },
+                    new AstronautDuty
+                    {
+                        Id = 2,
+                        PersonId = 1,
+                        Rank = "Captain",
+                        DutyTitle = "Mission Lead",
+                        DutyStartDate = new DateTime(2016, 1, 1),
+                        DutyEndDate = null
+                    },
+                    new AstronautDuty
+                    {
+                        Id = 3,
+                        PersonId = 3,
+                        Rank = "Major",
+                        DutyTitle = "Science Officer",
+                        DutyStartDate = new DateTime(2012, 5, 15),
+                        DutyEndDate = null
+                    },
+                    new AstronautDuty
+                    {
+                        Id = 4,
+                        PersonId = 2,
+                        Rank = "Lieutenant",
+                        DutyTitle = "Pilot",
+                        DutyStartDate = new DateTime(2018, 3, 10),
+                        DutyEndDate = null
                     }
                 );
         }

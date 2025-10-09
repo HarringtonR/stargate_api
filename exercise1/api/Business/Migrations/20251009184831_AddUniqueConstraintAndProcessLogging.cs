@@ -3,11 +3,14 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
+#pragma warning disable CA1814 // Prefer jagged arrays over multidimensional
+
 namespace StargateAPI.Migrations
 {
-
-    public partial class AddProcessLogging : Migration
+    /// <inheritdoc />
+    public partial class AddUniqueConstraintAndProcessLogging : Migration
     {
+        /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.CreateTable(
@@ -56,37 +59,6 @@ namespace StargateAPI.Migrations
             migrationBuilder.DropIndex(
                 name: "IX_Person_Name",
                 table: "Person");
-
-            migrationBuilder.InsertData(
-                table: "Person",
-                columns: new[] { "Id", "Name" },
-                values: new object[,]
-                {
-                    { 1, "John Doe" },
-                    { 2, "Jane Doe" },
-                    { 3, "Samantha Carter" },
-                    { 4, "Daniel Jackson" }
-                });
-
-            migrationBuilder.InsertData(
-                table: "AstronautDetail",
-                columns: new[] { "Id", "CareerEndDate", "CareerStartDate", "CurrentDutyTitle", "CurrentRank", "PersonId" },
-                values: new object[,]
-                {
-                    { 1, null, new DateTime(2010, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), "Commander", "1LT", 1 },
-                    { 2, null, new DateTime(2012, 5, 15, 0, 0, 0, 0, DateTimeKind.Unspecified), "Science Officer", "Major", 3 }
-                });
-
-            migrationBuilder.InsertData(
-                table: "AstronautDuty",
-                columns: new[] { "Id", "DutyEndDate", "DutyStartDate", "DutyTitle", "PersonId", "Rank" },
-                values: new object[,]
-                {
-                    { 1, new DateTime(2015, 12, 31, 0, 0, 0, 0, DateTimeKind.Unspecified), new DateTime(2010, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), "Commander", 1, "1LT" },
-                    { 2, null, new DateTime(2016, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), "Mission Lead", 1, "Captain" },
-                    { 3, null, new DateTime(2012, 5, 15, 0, 0, 0, 0, DateTimeKind.Unspecified), "Science Officer", 3, "Major" },
-                    { 4, null, new DateTime(2018, 3, 10, 0, 0, 0, 0, DateTimeKind.Unspecified), "Pilot", 2, "Lieutenant" }
-                });
         }
     }
 }

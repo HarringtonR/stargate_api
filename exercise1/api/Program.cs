@@ -40,6 +40,7 @@ builder.Services.AddScoped<IProcessLoggingService, ProcessLoggingService>();
 builder.Services.AddMediatR(cfg =>
 {
     cfg.AddRequestPreProcessor<CreateAstronautDutyPreProcessor>();
+    cfg.AddRequestPreProcessor<UpdatePersonPreProcessor>();
     cfg.RegisterServicesFromAssemblies(typeof(Program).Assembly);
 });
 
