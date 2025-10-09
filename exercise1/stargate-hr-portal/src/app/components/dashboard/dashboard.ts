@@ -54,14 +54,14 @@ export class Dashboard implements OnInit {
   }
 
   getAstronautCount(): number {
-    return this.people.filter(p => p.astronautDetail).length;
+    return this.people.filter(p => p.currentRank || p.currentDutyTitle).length;
   }
 
   getActiveAstronautCount(): number {
-    return this.people.filter(p => p.astronautDetail && !p.astronautDetail.careerEndDate).length;
+    return this.people.filter(p => (p.currentRank || p.currentDutyTitle) && !p.careerEndDate).length;
   }
 
   getRetiredAstronautCount(): number {
-    return this.people.filter(p => p.astronautDetail && p.astronautDetail.careerEndDate).length;
+    return this.people.filter(p => (p.currentRank || p.currentDutyTitle) && p.careerEndDate).length;
   }
 }

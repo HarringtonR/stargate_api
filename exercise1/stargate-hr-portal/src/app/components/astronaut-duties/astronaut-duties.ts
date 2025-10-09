@@ -298,4 +298,12 @@ export class AstronautDuties implements OnInit {
     
     return 'accent'; // Past duty
   }
+
+  isAstronaut(person: Person): boolean {
+    // Check if person exists in AstronautDetail table (via currentRank/currentDutyTitle from API)
+    // or has any AstronautDuty records (via astronautDuties array if available)
+    return !!(person.currentRank || person.currentDutyTitle || 
+              person.astronautDetail || 
+              (person.astronautDuties && person.astronautDuties.length > 0));
+  }
 }

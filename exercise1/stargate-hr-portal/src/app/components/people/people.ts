@@ -39,7 +39,7 @@ import { Person } from '../../models/person.model';
   styleUrl: './people.scss'
 })
 export class People implements OnInit {
-  displayedColumns: string[] = ['id', 'name', 'isAstronaut', 'currentRank', 'status', 'actions'];
+  displayedColumns: string[] = ['id', 'name', 'isAstronaut', 'currentRank', 'careerStartDate', 'careerEndDate', 'status', 'actions'];
   people: Person[] = [];
   filteredPeople: Person[] = [];
   loading = false;
@@ -137,6 +137,24 @@ export class People implements OnInit {
   }
 
   isAstronaut(person: Person): boolean {
-    return !!(person.currentRank || person.currentDutyTitle);
+    // Check if person exists in AstronautDetail table (via currentRank/currentDutyTitle from API)
+    // or has any AstronautDuty records (via astronautDuties array if available)
+    return !!(person.currentRank || person.currentDutyTitle || 
+              person.astronautDetail || 
+              (person.astronautDuties && person.astronautDuties.length > 0));
+  }
+
+  getCareerStartDate(person: Person): string {
+    if (person.careerStartDate) {
+      return new Date(person.careerStartDate).toLocaleDateString();
+    }
+    return 'N/A';
+  }
+
+  getCareerEndDate(person: Person): string {
+    if (person.careerEndDate) {
+      return new Date(person.careerEndDate).toLocaleDateString();
+    }
+    return this.isAstronaut(person) ? 'Current' : 'N/A';
   }
 }

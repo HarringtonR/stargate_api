@@ -32,13 +32,13 @@
                 <p>No people found matching "{{searchQuery}}"</p>
               </div>
             } @else {
-              @for (person of filteredPeople; track person.id) {
+              @for (person of filteredPeople; track person.personId) {
                 <div class="person-item" 
-                     [class.selected]="selectedPerson?.id === person.id"
+                     [class.selected]="selectedPerson?.personId === person.personId"
                      (click)="selectPerson(person)"
-                     [matTooltip]="person.astronautDetail ? 'Active Astronaut' : 'Not an astronaut yet'">
-                  <mat-icon [color]="person.astronautDetail ? 'primary' : ''">
-                    {{ person.astronautDetail ? 'rocket' : 'person' }}
+                     [matTooltip]="isAstronaut(person) ? 'Active Astronaut' : 'Not an astronaut yet'">
+                  <mat-icon [color]="isAstronaut(person) ? 'primary' : ''">
+                    {{ isAstronaut(person) ? 'rocket' : 'person' }}
                   </mat-icon>
                   <span>{{ person.name }}</span>
                 </div>
@@ -61,13 +61,13 @@
         <!-- Person Details Header -->
         <mat-card class="person-details-card">
           <mat-card-header>
-            <mat-icon mat-card-avatar [color]="selectedPerson.astronautDetail ? 'primary' : ''">
-              {{ selectedPerson.astronautDetail ? 'rocket' : 'person' }}
+            <mat-icon mat-card-avatar [color]="isAstronaut(selectedPerson) ? 'primary' : ''">
+              {{ isAstronaut(selectedPerson) ? 'rocket' : 'person' }}
             </mat-icon>
             <mat-card-title>{{ selectedPerson.name }}</mat-card-title>
             <mat-card-subtitle>
-              @if (selectedPerson.astronautDetail) {
-                {{ selectedPerson.astronautDetail.currentRank }} - {{ selectedPerson.astronautDetail.currentDutyTitle }}
+              @if (isAstronaut(selectedPerson)) {
+                {{ selectedPerson.currentRank }} - {{ selectedPerson.currentDutyTitle }}
                 <mat-chip color="primary" selected>{{ getTotalServiceYears() }} years service</mat-chip>
               } @else {
                 <span>Not currently an astronaut</span>
