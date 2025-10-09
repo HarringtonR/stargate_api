@@ -57,6 +57,11 @@ namespace StargateAPI.Business.Commands
 
             var person = await _context.Connection.QueryFirstOrDefaultAsync<Person>(query);
 
+            if (person == null)
+            {
+                throw new BadHttpRequestException("Person not found");
+            }
+
             query = $"SELECT * FROM [AstronautDetail] WHERE {person.Id} = PersonId";
 
             var astronautDetail = await _context.Connection.QueryFirstOrDefaultAsync<AstronautDetail>(query);
@@ -70,7 +75,8 @@ namespace StargateAPI.Business.Commands
                 astronautDetail.CareerStartDate = request.DutyStartDate.Date;
                 if (request.DutyTitle == "RETIRED")
                 {
-                    astronautDetail.CareerEndDate = request.DutyStartDate.Date;
+                    // Set career end date to one day before retired duty start date (same as duty end dates)
+                    astronautDetail.CareerEndDate = request.DutyStartDate.AddDays(-1).Date;
                 }
 
                 await _context.AstronautDetails.AddAsync(astronautDetail);
@@ -82,19 +88,40 @@ namespace StargateAPI.Business.Commands
                 astronautDetail.CurrentRank = request.Rank;
                 if (request.DutyTitle == "RETIRED")
                 {
+                    // Set career end date to one day before retired duty start date (same as duty end dates)
                     astronautDetail.CareerEndDate = request.DutyStartDate.AddDays(-1).Date;
                 }
                 _context.AstronautDetails.Update(astronautDetail);
             }
 
-            query = $"SELECT * FROM [AstronautDuty] WHERE {person.Id} = PersonId Order By DutyStartDate Desc";
-
-            var astronautDuty = await _context.Connection.QueryFirstOrDefaultAsync<AstronautDuty>(query);
-
-            if (astronautDuty != null)
+            // When adding a RETIRED duty, close all existing open duties for this person
+            if (request.DutyTitle == "RETIRED")
             {
-                astronautDuty.DutyEndDate = request.DutyStartDate.AddDays(-1).Date;
-                _context.AstronautDuties.Update(astronautDuty);
+                // Get all existing duties for this person that don't have an end date
+                var openDuties = await _context.AstronautDuties
+                    .Where(d => d.PersonId == person.Id && d.DutyEndDate == null)
+                    .ToListAsync();
+
+                // Set the end date to one day before the retired duty start date
+                var endDate = request.DutyStartDate.AddDays(-1).Date;
+                foreach (var duty in openDuties)
+                {
+                    duty.DutyEndDate = endDate;
+                    _context.AstronautDuties.Update(duty);
+                }
+            }
+            else
+            {
+                // For non-retired duties, only close the most recent duty as before
+                query = $"SELECT * FROM [AstronautDuty] WHERE {person.Id} = PersonId AND DutyEndDate IS NULL Order By DutyStartDate Desc";
+
+                var astronautDuty = await _context.Connection.QueryFirstOrDefaultAsync<AstronautDuty>(query);
+
+                if (astronautDuty != null)
+                {
+                    astronautDuty.DutyEndDate = request.DutyStartDate.AddDays(-1).Date;
+                    _context.AstronautDuties.Update(astronautDuty);
+                }
             }
 
             var newAstronautDuty = new AstronautDuty()

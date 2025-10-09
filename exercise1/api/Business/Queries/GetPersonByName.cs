@@ -23,9 +23,21 @@ namespace StargateAPI.Business.Queries
         {
             var result = new GetPersonByNameResult();
 
-            var query = $"SELECT a.Id as PersonId, a.Name, b.CurrentRank, b.CurrentDutyTitle, b.CareerStartDate, b.CareerEndDate FROM [Person] a LEFT JOIN [AstronautDetail] b on b.PersonId = a.Id WHERE '{request.Name}' = a.Name";
+            // Modified query to include people who have either AstronautDetail records OR AstronautDuty records
+            var query = @"
+                SELECT DISTINCT 
+                    a.Id as PersonId, 
+                    a.Name, 
+                    COALESCE(b.CurrentRank, c.Rank) as CurrentRank,
+                    COALESCE(b.CurrentDutyTitle, c.DutyTitle) as CurrentDutyTitle,
+                    b.CareerStartDate, 
+                    b.CareerEndDate 
+                FROM [Person] a 
+                LEFT JOIN [AstronautDetail] b on b.PersonId = a.Id
+                LEFT JOIN [AstronautDuty] c on c.PersonId = a.Id AND c.DutyEndDate IS NULL
+                WHERE a.Name = @Name";
 
-            var person = await _context.Connection.QueryAsync<PersonAstronaut>(query);
+            var person = await _context.Connection.QueryAsync<PersonAstronaut>(query, new { Name = request.Name });
 
             result.Person = person.FirstOrDefault();
 
