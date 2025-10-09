@@ -15,6 +15,19 @@ builder.Services.AddControllers(options =>
 {
     options.Filters.Add<LoggingActionFilter>();
 });
+
+// Add CORS services
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAngularApp", policy =>
+    {
+        policy.WithOrigins("http://localhost:4200", "https://localhost:4200")
+              .AllowAnyHeader()
+              .AllowAnyMethod()
+              .AllowCredentials();
+    });
+});
+
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
@@ -33,6 +46,10 @@ builder.Services.AddMediatR(cfg =>
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
+
+// Enable CORS first (before other middleware)
+app.UseCors("AllowAngularApp");
+
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();

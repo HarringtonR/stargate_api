@@ -1,0 +1,27 @@
+<!-- Stargate HR Portal - Astronaut Career Tracking System -->
+<header class="header">
+  <div class="container">
+    <div class="logo-section">
+      <h1 class="app-title">Stargate HR Portal</h1>
+      <p class="subtitle">Astronaut Career Tracking System</p>
+    </div>
+    
+    <nav class="main-nav">
+      <ul class="nav-list">
+        <li><a routerLink="/dashboard" routerLinkActive="active" class="nav-link">Dashboard</a></li>
+        <li><a routerLink="/people" routerLinkActive="active" class="nav-link">People</a></li>
+        <li><a routerLink="/duties" routerLinkActive="active" class="nav-link">Astronaut Duties</a></li>
+      </ul>
+    </nav>
+  </div>
+</header>
+
+<main class="main-content">
+  <router-outlet />
+</main>
+
+<footer class="footer">
+  <div class="container">
+    <p>&copy; 2025 Stargate Command - Human Resources Division</p>
+  </div>
+</footer>

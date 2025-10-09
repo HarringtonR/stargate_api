@@ -1,0 +1,88 @@
+<div class="dashboard-container">
+  <h1 class="page-title">Astronaut Career Tracking Dashboard</h1>
+  <p class="page-subtitle">Current date: {{ currentDate | date:'longDate' }}</p>
+
+  <!-- Status Cards -->
+  <div class="stats-container">
+    <mat-card class="stats-card">
+      <mat-card-content>
+        <div class="card-content">
+          <mat-icon class="stats-icon">people</mat-icon>
+          <div class="stats-details">
+            <h2 class="stats-value">{{ people.length }}</h2>
+            <p class="stats-label">Total People</p>
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card class="stats-card">
+      <mat-card-content>
+        <div class="card-content">
+          <mat-icon class="stats-icon">flight_takeoff</mat-icon>
+          <div class="stats-details">
+            <h2 class="stats-value">{{ getAstronautCount() }}</h2>
+            <p class="stats-label">Total Astronauts</p>
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card class="stats-card">
+      <mat-card-content>
+        <div class="card-content">
+          <mat-icon class="stats-icon">rocket</mat-icon>
+          <div class="stats-details">
+            <h2 class="stats-value">{{ getActiveAstronautCount() }}</h2>
+            <p class="stats-label">Active Astronauts</p>
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card class="stats-card">
+      <mat-card-content>
+        <div class="card-content">
+          <mat-icon class="stats-icon">star</mat-icon>
+          <div class="stats-details">
+            <h2 class="stats-value">{{ getRetiredAstronautCount() }}</h2>
+            <p class="stats-label">Retired Astronauts</p>
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </div>
+
+  <!-- Quick Access Buttons -->
+  <div class="quick-access">
+    <h2>Quick Actions</h2>
+    <div class="button-container">
+      <a mat-raised-button color="primary" routerLink="/people">
+        <mat-icon>people</mat-icon>
+        View All People
+      </a>
+      <a mat-raised-button color="accent" routerLink="/duties">
+        <mat-icon>assignment</mat-icon>
+        View Astronaut Duties
+      </a>
+    </div>
+  </div>
+
+  <!-- Loading/Error States -->
+  @if (loading) {
+    <div class="loading-container">
+      <mat-spinner diameter="40"></mat-spinner>
+      <p>Loading dashboard data...</p>
+    </div>
+  }
+
+  @if (error) {
+    <mat-card class="error-card">
+      <mat-card-content>
+        <mat-icon color="warn">error</mat-icon>
+        <p>{{ error }}</p>
+        <button mat-button color="primary" (click)="loadPeople()">Try Again</button>
+      </mat-card-content>
+    </mat-card>
+  }
+</div>

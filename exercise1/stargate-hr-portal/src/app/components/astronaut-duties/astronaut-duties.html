@@ -1,0 +1,226 @@
+<div class="duties-container">
+  <h1 class="page-title">Astronaut Duty Management</h1>
+  
+  <div class="layout-container">
+    <!-- Left Column: People List -->
+    <div class="people-list-container">
+      <mat-card class="people-list-card">
+        <mat-card-header>
+          <mat-icon mat-card-avatar>groups</mat-icon>
+          <mat-card-title>Personnel Directory</mat-card-title>
+          <mat-card-subtitle>Select a person to manage duties</mat-card-subtitle>
+        </mat-card-header>
+        
+        <mat-card-content>
+          <mat-form-field appearance="outline" class="search-field">
+            <mat-label>Search People</mat-label>
+            <input matInput [(ngModel)]="searchQuery" (input)="applyFilter()" placeholder="Filter by name">
+            <button *ngIf="searchQuery" matSuffix mat-icon-button aria-label="Clear" (click)="clearSearch()">
+              <mat-icon>close</mat-icon>
+            </button>
+            <mat-icon matPrefix>search</mat-icon>
+          </mat-form-field>
+          
+          <div class="people-list">
+            @if (loading && !selectedPerson) {
+              <div class="loading-container">
+                <mat-spinner diameter="30"></mat-spinner>
+              </div>
+            } @else if (filteredPeople.length === 0) {
+              <div class="no-results">
+                <mat-icon>search_off</mat-icon>
+                <p>No people found matching "{{searchQuery}}"</p>
+              </div>
+            } @else {
+              @for (person of filteredPeople; track person.id) {
+                <div class="person-item" 
+                     [class.selected]="selectedPerson?.id === person.id"
+                     (click)="selectPerson(person)"
+                     [matTooltip]="person.astronautDetail ? 'Active Astronaut' : 'Not an astronaut yet'">
+                  <mat-icon [color]="person.astronautDetail ? 'primary' : ''">
+                    {{ person.astronautDetail ? 'rocket' : 'person' }}
+                  </mat-icon>
+                  <span>{{ person.name }}</span>
+                </div>
+              }
+            }
+          </div>
+        </mat-card-content>
+      </mat-card>
+    </div>
+    
+    <!-- Right Column: Duty Details -->
+    <div class="duty-details-container">
+      @if (!selectedPerson) {
+        <div class="select-prompt">
+          <mat-icon class="big-icon">rocket_launch</mat-icon>
+          <h2>Astronaut Career Management</h2>
+          <p>Select a person from the directory to view and manage their astronaut duties and career progression.</p>
+        </div>
+      } @else {
+        <!-- Person Details Header -->
+        <mat-card class="person-details-card">
+          <mat-card-header>
+            <mat-icon mat-card-avatar [color]="selectedPerson.astronautDetail ? 'primary' : ''">
+              {{ selectedPerson.astronautDetail ? 'rocket' : 'person' }}
+            </mat-icon>
+            <mat-card-title>{{ selectedPerson.name }}</mat-card-title>
+            <mat-card-subtitle>
+              @if (selectedPerson.astronautDetail) {
+                {{ selectedPerson.astronautDetail.currentRank }} - {{ selectedPerson.astronautDetail.currentDutyTitle }}
+                <mat-chip color="primary" selected>{{ getTotalServiceYears() }} years service</mat-chip>
+              } @else {
+                <span>Not currently an astronaut</span>
+                @if (astronautDuties.length > 0) {
+                  <mat-chip color="accent" selected>Former astronaut</mat-chip>
+                }
+              }
+            </mat-card-subtitle>
+          </mat-card-header>
+        </mat-card>
+        
+        <!-- Add Duty Form -->
+        <mat-card class="add-duty-card">
+          <mat-card-header>
+            <mat-icon mat-card-avatar>assignment_add</mat-icon>
+            <mat-card-title>Add New Assignment</mat-card-title>
+            <mat-card-subtitle>Create a new duty record for {{ selectedPerson.name }}</mat-card-subtitle>
+          </mat-card-header>
+          
+          <mat-card-content>
+            <form [formGroup]="dutyForm" (ngSubmit)="submitDuty()">
+              <div class="form-row">
+                <mat-form-field appearance="outline">
+                  <mat-label>Rank</mat-label>
+                  <mat-select formControlName="rank" required>
+                    @for (rank of rankOptions; track rank) {
+                      <mat-option [value]="rank">{{ rank }}</mat-option>
+                    }
+                  </mat-select>
+                  <mat-hint>Current or new rank for this assignment</mat-hint>
+                  <mat-error *ngIf="dutyForm.get('rank')?.invalid">Rank is required</mat-error>
+                </mat-form-field>
+                
+                <mat-form-field appearance="outline">
+                  <mat-label>Duty Title</mat-label>
+                  <mat-select formControlName="dutyTitle" required>
+                    @for (title of dutyTitleOptions; track title) {
+                      <mat-option [value]="title">{{ title }}</mat-option>
+                    }
+                  </mat-select>
+                  <mat-hint>Position or status for this assignment</mat-hint>
+                  <mat-error *ngIf="dutyForm.get('dutyTitle')?.invalid">Duty Title is required</mat-error>
+                </mat-form-field>
+              </div>
+              
+              <div class="form-row">
+                <mat-form-field appearance="outline" class="date-field">
+                  <mat-label>Start Date</mat-label>
+                  <input matInput [matDatepicker]="picker" formControlName="dutyStartDate" required>
+                  <mat-datepicker-toggle matIconSuffix [for]="picker"></mat-datepicker-toggle>
+                  <mat-datepicker #picker></mat-datepicker>
+                  <mat-hint>When this assignment begins</mat-hint>
+                  <mat-error *ngIf="dutyForm.get('dutyStartDate')?.invalid">Start Date is required</mat-error>
+                </mat-form-field>
+              </div>
+              
+              <div class="form-actions">
+                <button type="button" mat-button (click)="resetForm()">
+                  Reset
+                </button>
+                <button type="submit" mat-raised-button color="primary" [disabled]="dutyForm.invalid || loading">
+                  <mat-icon>add</mat-icon>
+                  Add Assignment
+                </button>
+              </div>
+            </form>
+          </mat-card-content>
+        </mat-card>
+        
+        <!-- Duties List -->
+        <mat-card class="duties-list-card">
+          <mat-card-header>
+            <mat-icon mat-card-avatar>history</mat-icon>
+            <mat-card-title>Career History</mat-card-title>
+            <mat-card-subtitle>
+              @if (astronautDuties.length > 0) {
+                {{astronautDuties.length}} assignments on record
+              } @else {
+                No duty records found
+              }
+            </mat-card-subtitle>
+          </mat-card-header>
+          
+          <mat-card-content>
+            @if (loading && selectedPerson) {
+              <div class="loading-container">
+                <mat-spinner diameter="30"></mat-spinner>
+                <p>Loading career history...</p>
+              </div>
+            } @else if (error) {
+              <div class="error-message">
+                <mat-icon color="warn">error</mat-icon>
+                <p>{{ error }}</p>
+              </div>
+            } @else if (astronautDuties.length === 0) {
+              <div class="no-duties">
+                <mat-icon>flight</mat-icon>
+                <p>No duties found for this person</p>
+                <button mat-stroked-button color="primary">
+                  <mat-icon>add</mat-icon>
+                  Create their first assignment
+                </button>
+              </div>
+            } @else {
+              <mat-accordion multi="true">
+                @for (duty of astronautDuties; track duty.id) {
+                  <mat-expansion-panel>
+                    <mat-expansion-panel-header>
+                      <mat-panel-title>
+                        <mat-icon [color]="getDutyColor(duty)" class="duty-icon">
+                          {{ duty.dutyTitle === 'RETIRED' ? 'cancel' : (isDutyActive(duty) ? 'stars' : 'history') }}
+                        </mat-icon>
+                        {{ duty.dutyTitle }}
+                      </mat-panel-title>
+                      <mat-panel-description>
+                        {{ duty.rank }}
+                        <mat-chip [color]="getDutyColor(duty)" selected>
+                          {{ isDutyActive(duty) ? 'Current' : duty.dutyTitle === 'RETIRED' ? 'Retired' : 'Past' }}
+                        </mat-chip>
+                      </mat-panel-description>
+                    </mat-expansion-panel-header>
+                    
+                    <div class="duty-details">
+                      <div class="detail-row">
+                        <span class="detail-label">Rank:</span>
+                        <span class="detail-value">{{ duty.rank }}</span>
+                      </div>
+                      <div class="detail-row">
+                        <span class="detail-label">Title:</span>
+                        <span class="detail-value">{{ duty.dutyTitle }}</span>
+                      </div>
+                      <div class="detail-row">
+                        <span class="detail-label">Start Date:</span>
+                        <span class="detail-value">{{ formatDateLong(duty.dutyStartDate) }}</span>
+                      </div>
+                      <div class="detail-row">
+                        <span class="detail-label">End Date:</span>
+                        <span class="detail-value">{{ duty.dutyEndDate ? formatDateLong(duty.dutyEndDate) : 'Current' }}</span>
+                      </div>
+                      <div class="detail-row">
+                        <span class="detail-label">Duration:</span>
+                        <span class="detail-value">{{ getDutyDuration(duty) }}</span>
+                      </div>
+                      
+                      <mat-divider class="detail-divider"></mat-divider>
+                    </div>
+                  </mat-expansion-panel>
+                }
+              </mat-accordion>
+            }
+          </mat-card-content>
+        </mat-card>
+      }
+    </div>
+  </div>
+</div>

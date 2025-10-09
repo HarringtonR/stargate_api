@@ -1,0 +1,127 @@
+<div class="people-container">
+  <div class="header-container">
+    <h1 class="page-title">People Management</h1>
+    
+    <mat-card class="add-person-card">
+      <mat-card-content>
+        <div class="add-person-form">
+          <mat-form-field appearance="outline">
+            <mat-label>New Person Name</mat-label>
+            <input matInput [(ngModel)]="newPersonName" placeholder="Enter name" />
+          </mat-form-field>
+          <button mat-raised-button color="primary" (click)="addPerson()" [disabled]="loading">
+            <mat-icon>person_add</mat-icon>
+            Add Person
+          </button>
+        </div>
+      </mat-card-content>
+    </mat-card>
+    
+    <div class="filter-container">
+      <mat-form-field appearance="outline" class="search-field">
+        <mat-label>Search People</mat-label>
+        <input matInput [(ngModel)]="searchQuery" (input)="applyFilter()" placeholder="Filter by name">
+        <button *ngIf="searchQuery" matSuffix mat-icon-button aria-label="Clear" (click)="clearSearch()">
+          <mat-icon>close</mat-icon>
+        </button>
+        <mat-icon matPrefix>search</mat-icon>
+      </mat-form-field>
+    </div>
+  </div>
+
+  <!-- Loading indicator -->
+  @if (loading) {
+    <div class="loading-container">
+      <mat-spinner diameter="40"></mat-spinner>
+      <p>Loading people data...</p>
+    </div>
+  }
+
+  <!-- Error message -->
+  @if (error) {
+    <mat-card class="error-card">
+      <mat-card-content>
+        <mat-icon color="warn">error</mat-icon>
+        <p>{{ error }}</p>
+        <button mat-button color="primary" (click)="loadPeople()">Try Again</button>
+      </mat-card-content>
+    </mat-card>
+  }
+
+  <!-- People table -->
+  @if (!loading && !error && filteredPeople.length > 0) {
+    <div class="table-container">
+      <table mat-table [dataSource]="filteredPeople" matSort class="people-table">
+        <!-- ID Column -->
+        <ng-container matColumnDef="id">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header> ID </th>
+          <td mat-cell *matCellDef="let person"> {{ person.personId }} </td>
+        </ng-container>
+
+        <!-- Name Column -->
+        <ng-container matColumnDef="name">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header> Name </th>
+          <td mat-cell *matCellDef="let person"> {{ person.name }} </td>
+        </ng-container>
+
+        <!-- Is Astronaut Column -->
+        <ng-container matColumnDef="isAstronaut">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header> Astronaut </th>
+          <td mat-cell *matCellDef="let person">
+            <mat-icon *ngIf="isAstronaut(person)" color="primary">check_circle</mat-icon>
+            <mat-icon *ngIf="!isAstronaut(person)" color="warn">cancel</mat-icon>
+          </td>
+        </ng-container>
+
+        <!-- Current Rank Column -->
+        <ng-container matColumnDef="currentRank">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header> Current Rank </th>
+          <td mat-cell *matCellDef="let person"> {{ getCurrentRank(person) }} </td>
+        </ng-container>
+
+        <!-- Status Column -->
+        <ng-container matColumnDef="status">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header> Status </th>
+          <td mat-cell *matCellDef="let person"> 
+            <span [ngClass]="{
+              'status-active': isAstronaut(person) && !person.careerEndDate,
+              'status-retired': isAstronaut(person) && person.careerEndDate,
+              'status-none': !isAstronaut(person)
+            }">
+              {{ getPersonStatus(person) }}
+            </span>
+          </td>
+        </ng-container>
+
+        <!-- Actions Column -->
+        <ng-container matColumnDef="actions">
+          <th mat-header-cell *matHeaderCellDef> Actions </th>
+          <td mat-cell *matCellDef="let person">
+            <a mat-icon-button [routerLink]="['/person', person.name]" color="primary" matTooltip="View Details">
+              <mat-icon>visibility</mat-icon>
+            </a>
+          </td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+      </table>
+
+      <mat-paginator [pageSizeOptions]="[5, 10, 25, 100]" showFirstLastButtons></mat-paginator>
+    </div>
+  }
+
+  <!-- Empty state -->
+  @if (!loading && !error && filteredPeople.length === 0) {
+    <div class="empty-state">
+      <mat-icon class="empty-icon">people_outline</mat-icon>
+      <h2>No people found</h2>
+      @if (searchQuery) {
+        <p>No people match your search criteria.</p>
+        <button mat-button color="primary" (click)="clearSearch()">Clear Search</button>
+      } @else {
+        <p>Start by adding a new person.</p>
+      }
+    </div>
+  }
+</div>
