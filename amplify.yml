@@ -1,0 +1,17 @@
+version: 1
+frontend:
+  phases:
+    preBuild:
+      commands:
+        - cd exercise1/stargate-hr-portal
+        - npm ci
+    build:
+      commands:
+        - npm run build
+  artifacts:
+    baseDirectory: exercise1/stargate-hr-portal/dist/stargate-hr-portal/browser
+    files:
+      - '**/*'
+  cache:
+    paths:
+      - exercise1/stargate-hr-portal/node_modules/**/*
