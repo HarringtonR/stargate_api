@@ -6,7 +6,8 @@ import {
   Person, 
   AstronautDuty, 
   CreatePersonRequest, 
-  CreateAstronautDutyRequest, 
+  CreateAstronautDutyRequest,
+  UpdateAstronautDutyRequest, 
   BaseResponse,
   PersonAstronaut 
 } from '../models/person.model';
@@ -15,7 +16,8 @@ import {
   providedIn: 'root'
 })
 export class StargateApiService {
-  private readonly baseUrl = 'https://localhost:7204'; // Updated to match your API URL
+  // private readonly baseUrl = 'https://localhost:7204'; // Updated to match your API URL
+  private readonly baseUrl = 'http://stargate-api-prod.eba-spvrrfv5.us-east-1.elasticbeanstalk.com/';
   private readonly httpOptions = {
     headers: new HttpHeaders({
       'Content-Type': 'application/json'
@@ -62,9 +64,18 @@ export class StargateApiService {
   // Astronaut Duty endpoints
   getAstronautDutiesByName(name: string): Observable<AstronautDuty[]> {
     this.setLoading(true);
-    return this.http.get<BaseResponse<AstronautDuty[]>>(`${this.baseUrl}/AstronautDuty/${encodeURIComponent(name)}`, this.httpOptions)
+    return this.http.get<any>(`${this.baseUrl}/AstronautDuty/${encodeURIComponent(name)}`, this.httpOptions)
       .pipe(
-        map(response => response.data || []),
+        map(response => {
+          // Handle the actual API response structure
+          if (response.astronautDuties) {
+            return response.astronautDuties;
+          } else if (response.data) {
+            return response.data;
+          } else {
+            return [];
+          }
+        }),
         tap(() => this.setLoading(false))
       );
   }
@@ -72,6 +83,14 @@ export class StargateApiService {
   createAstronautDuty(request: CreateAstronautDutyRequest): Observable<BaseResponse> {
     this.setLoading(true);
     return this.http.post<BaseResponse>(`${this.baseUrl}/AstronautDuty`, request, this.httpOptions)
+      .pipe(
+        tap(() => this.setLoading(false))
+      );
+  }
+
+  updateAstronautDuty(dutyId: number, request: UpdateAstronautDutyRequest): Observable<any> {
+    this.setLoading(true);
+    return this.http.put<any>(`${this.baseUrl}/AstronautDuty/${dutyId}`, request, this.httpOptions)
       .pipe(
         tap(() => this.setLoading(false))
       );

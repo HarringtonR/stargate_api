@@ -40,6 +40,13 @@ export interface CreateAstronautDutyRequest {
   dutyStartDate: string;
 }
 
+export interface UpdateAstronautDutyRequest {
+  dutyTitle?: string;
+  rank?: string;
+  dutyStartDate?: string;
+  dutyEndDate?: string;
+}
+
 export interface BaseResponse<T = any> {
   success: boolean;
   message: string;
