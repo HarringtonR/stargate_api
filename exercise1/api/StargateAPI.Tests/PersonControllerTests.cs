@@ -201,31 +201,6 @@ public class PersonControllerTests
     }
 
     [Fact]
-    public async Task GetPersonByName_ReturnsInternalServerError_WhenMediatorThrowsException()
-    {
-        // Arrange
-        var mediator = new Mock<IMediator>();
-        mediator.Setup(m => m.Send(It.IsAny<GetPersonByName>(), default))
-            .ThrowsAsync(new TimeoutException("Request timeout"));
-
-        var controller = new PersonController(mediator.Object);
-
-        // Act
-        var result = await controller.GetPersonByName("John Doe");
-
-        // Assert - This covers the catch branch!
-        Assert.IsType<ObjectResult>(result);
-        var objectResult = result as ObjectResult;
-        Assert.Equal(500, objectResult?.StatusCode);
-        
-        var response = objectResult?.Value as BaseResponse;
-        Assert.NotNull(response);
-        Assert.False(response.Success);
-        Assert.Equal("Request timeout", response.Message);
-        Assert.Equal(500, response.ResponseCode);
-    }
-
-    [Fact]
     public async Task CreatePerson_ReturnsObjectResult_WhenPersonCreated()
     {
         // Arrange
@@ -529,5 +504,80 @@ public class PersonControllerTests
         Assert.IsType<ObjectResult>(result);
         var objectResult = result as ObjectResult;
         Assert.Equal(200, objectResult?.StatusCode);
+    }
+
+    [Fact]
+    public async Task GetPersonByName_ReturnsInternalServerError_WhenMediatorFailure()
+    {
+        // Arrange
+        var mediator = new Mock<IMediator>();
+        mediator.Setup(m => m.Send(It.IsAny<GetPersonByName>(), default))
+            .ThrowsAsync(new System.Exception("Database connection failed"));
+
+        var controller = new PersonController(mediator.Object);
+
+        // Act
+        var result = await controller.GetPersonByName("John Doe");
+
+        // Assert
+        Assert.IsType<ObjectResult>(result);
+        var objectResult = result as ObjectResult;
+        Assert.Equal(500, objectResult?.StatusCode);
+        
+        var response = objectResult?.Value as BaseResponse;
+        Assert.NotNull(response);
+        Assert.False(response.Success);
+        Assert.Equal("Database connection failed", response.Message);
+        Assert.Equal((int)HttpStatusCode.InternalServerError, response.ResponseCode);
+    }
+
+    [Fact]
+    public async Task CreatePerson_ReturnsInternalServerError_WhenMediatorFailure()
+    {
+        // Arrange
+        var mediator = new Mock<IMediator>();
+        mediator.Setup(m => m.Send(It.IsAny<CreatePerson>(), default))
+            .ThrowsAsync(new System.Exception("Database connection failed"));
+
+        var controller = new PersonController(mediator.Object);
+
+        // Act
+        var result = await controller.CreatePerson("New Person");
+
+        // Assert
+        Assert.IsType<ObjectResult>(result);
+        var objectResult = result as ObjectResult;
+        Assert.Equal(500, objectResult?.StatusCode);
+        
+        var response = objectResult?.Value as BaseResponse;
+        Assert.NotNull(response);
+        Assert.False(response.Success);
+        Assert.Equal("Database connection failed", response.Message);
+        Assert.Equal((int)HttpStatusCode.InternalServerError, response.ResponseCode);
+    }
+
+    [Fact]
+    public async Task UpdatePerson_ReturnsInternalServerError_WhenMediatorFailure()
+    {
+        // Arrange
+        var mediator = new Mock<IMediator>();
+        mediator.Setup(m => m.Send(It.IsAny<UpdatePerson>(), default))
+            .ThrowsAsync(new System.Exception("Database connection failed"));
+
+        var controller = new PersonController(mediator.Object);
+
+        // Act
+        var result = await controller.UpdatePerson("Old Name", "New Name");
+
+        // Assert
+        Assert.IsType<ObjectResult>(result);
+        var objectResult = result as ObjectResult;
+        Assert.Equal(500, objectResult?.StatusCode);
+        
+        var response = objectResult?.Value as BaseResponse;
+        Assert.NotNull(response);
+        Assert.False(response.Success);
+        Assert.Equal("Database connection failed", response.Message);
+        Assert.Equal((int)HttpStatusCode.InternalServerError, response.ResponseCode);
     }
 }

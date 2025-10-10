@@ -51,7 +51,7 @@ namespace StargateAPI.Business.Commands
                 .OrderByDescending(z => z.DutyEndDate)
                 .FirstOrDefault();
 
-            if (lastEndedDuty != null && request.DutyTitle.ToUpper() != "RETIRED")
+            if (lastEndedDuty != null && lastEndedDuty.DutyEndDate.HasValue && request.DutyTitle.ToUpper() != "RETIRED")
             {
                 var expectedStartDate = lastEndedDuty.DutyEndDate.Value.AddDays(1).Date;
                 if (request.DutyStartDate.Date != expectedStartDate)

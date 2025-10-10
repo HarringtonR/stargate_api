@@ -575,19 +575,19 @@ public class AstronautDutyControllerTests
     }
 
     [Fact]
-    public async Task GetAstronautDutiesByName_ReturnsInternalServerError_WhenMediatorThrowsException()
+    public async Task GetAstronautDutiesByName_ReturnsInternalServerError_WhenMediatorFailure()
     {
         // Arrange
         var mediator = new Mock<IMediator>();
         mediator.Setup(m => m.Send(It.IsAny<GetAstronautDutiesByName>(), default))
-            .ThrowsAsync(new InvalidOperationException("Database connection timeout"));
+            .ThrowsAsync(new System.Exception("Database connection failed"));
 
         var controller = new AstronautDutyController(mediator.Object);
 
         // Act
         var result = await controller.GetAstronautDutiesByName("John Doe");
 
-        // Assert - This covers the catch branch!
+        // Assert
         Assert.IsType<ObjectResult>(result);
         var objectResult = result as ObjectResult;
         Assert.Equal(500, objectResult?.StatusCode);
@@ -595,32 +595,32 @@ public class AstronautDutyControllerTests
         var response = objectResult?.Value as BaseResponse;
         Assert.NotNull(response);
         Assert.False(response.Success);
-        Assert.Equal("Database connection timeout", response.Message);
-        Assert.Equal(500, response.ResponseCode);
+        Assert.Equal("Database connection failed", response.Message);
+        Assert.Equal((int)HttpStatusCode.InternalServerError, response.ResponseCode);
     }
 
     [Fact]
-    public async Task CreateAstronautDuty_ReturnsInternalServerError_WhenMediatorThrowsGenericException()
+    public async Task CreateAstronautDuty_ReturnsInternalServerError_WhenMediatorFailure()
     {
         // Arrange
         var mediator = new Mock<IMediator>();
         var createRequest = new CreateAstronautDuty
         {
             Name = "John Doe",
-            Rank = "Captain", 
+            Rank = "Captain",
             DutyTitle = "Commander",
             DutyStartDate = DateTime.Now.Date
         };
 
         mediator.Setup(m => m.Send(It.IsAny<CreateAstronautDuty>(), default))
-            .ThrowsAsync(new InvalidOperationException("Unexpected database error"));
+            .ThrowsAsync(new System.Exception("Database connection failed"));
 
         var controller = new AstronautDutyController(mediator.Object);
 
         // Act
         var result = await controller.CreateAstronautDuty(createRequest);
 
-        // Assert - This covers the catch branch!
+        // Assert
         Assert.IsType<ObjectResult>(result);
         var objectResult = result as ObjectResult;
         Assert.Equal(500, objectResult?.StatusCode);
@@ -628,40 +628,7 @@ public class AstronautDutyControllerTests
         var response = objectResult?.Value as BaseResponse;
         Assert.NotNull(response);
         Assert.False(response.Success);
-        Assert.Equal("Unexpected database error", response.Message);
-        Assert.Equal(500, response.ResponseCode);
-    }
-
-    [Fact]
-    public async Task CreateAstronautDuty_ReturnsInternalServerError_WhenMediatorThrowsTimeoutException()
-    {
-        // Arrange
-        var mediator = new Mock<IMediator>();
-        var createRequest = new CreateAstronautDuty
-        {
-            Name = "Jane Smith",
-            Rank = "Lieutenant",
-            DutyTitle = "Pilot", 
-            DutyStartDate = DateTime.Now.Date.AddDays(-10)
-        };
-
-        mediator.Setup(m => m.Send(It.IsAny<CreateAstronautDuty>(), default))
-            .ThrowsAsync(new TimeoutException("Operation timed out after 30 seconds"));
-
-        var controller = new AstronautDutyController(mediator.Object);
-
-        // Act
-        var result = await controller.CreateAstronautDuty(createRequest);
-
-        // Assert - This covers the catch branch!
-        Assert.IsType<ObjectResult>(result);
-        var objectResult = result as ObjectResult;
-        Assert.Equal(500, objectResult?.StatusCode);
-        
-        var response = objectResult?.Value as BaseResponse;
-        Assert.NotNull(response);
-        Assert.False(response.Success);
-        Assert.Equal("Operation timed out after 30 seconds", response.Message);
-        Assert.Equal(500, response.ResponseCode);
+        Assert.Equal("Database connection failed", response.Message);
+        Assert.Equal((int)HttpStatusCode.InternalServerError, response.ResponseCode);
     }
 }
