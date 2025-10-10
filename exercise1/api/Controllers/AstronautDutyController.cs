@@ -57,5 +57,25 @@ namespace StargateAPI.Controllers
                 });
             }
         }
+
+        [HttpPut("{dutyId}")]
+        public async Task<IActionResult> UpdateAstronautDuty(int dutyId, [FromBody] UpdateAstronautDuty request)
+        {
+            try
+            {
+                request.DutyId = dutyId;
+                var result = await _mediator.Send(request);
+                return this.GetResponse(result);
+            }
+            catch (Exception ex)
+            {
+                return this.GetResponse(new BaseResponse()
+                {
+                    Message = ex.Message,
+                    Success = false,
+                    ResponseCode = (int)HttpStatusCode.InternalServerError
+                });
+            }
+        }
     }
 }

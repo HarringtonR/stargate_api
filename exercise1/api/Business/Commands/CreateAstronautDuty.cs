@@ -30,13 +30,65 @@ namespace StargateAPI.Business.Commands
 
         public Task Process(CreateAstronautDuty request, CancellationToken cancellationToken)
         {
+            // Validate person exists (Rule #1 enforcement)
             var person = _context.People.AsNoTracking().FirstOrDefault(z => z.Name == request.Name);
+            if (person is null) 
+                throw new BadHttpRequestException($"Person with name '{request.Name}' not found");
 
-            if (person is null) throw new BadHttpRequestException("Bad Request");
+            // Business Rule: A Person will only ever hold one current Astronaut Duty Title, Start Date, and Rank at a time
+            // Check if person already has a duty with the same start date
+            var existingDutyOnSameDate = _context.AstronautDuties
+                .AsNoTracking()
+                .FirstOrDefault(z => z.PersonId == person.Id && z.DutyStartDate.Date == request.DutyStartDate.Date);
 
-            var verifyNoPreviousDuty = _context.AstronautDuties.FirstOrDefault(z => z.DutyTitle == request.DutyTitle && z.DutyStartDate == request.DutyStartDate);
+            if (existingDutyOnSameDate is not null)
+                throw new BadHttpRequestException($"Person '{request.Name}' already has an astronaut duty starting on {request.DutyStartDate:yyyy-MM-dd}. Only one duty per start date is allowed.");
 
-            if (verifyNoPreviousDuty is not null) throw new BadHttpRequestException("Bad Request");
+            // Business Rule: Start date should be 1 day after the end date of previous duty (except for RETIRED)
+            var lastEndedDuty = _context.AstronautDuties
+                .AsNoTracking()
+                .Where(z => z.PersonId == person.Id && z.DutyEndDate.HasValue)
+                .OrderByDescending(z => z.DutyEndDate)
+                .FirstOrDefault();
+
+            if (lastEndedDuty != null && request.DutyTitle.ToUpper() != "RETIRED")
+            {
+                var expectedStartDate = lastEndedDuty.DutyEndDate.Value.AddDays(1).Date;
+                if (request.DutyStartDate.Date != expectedStartDate)
+                {
+                    throw new BadHttpRequestException(
+                        $"New duty start date should be {expectedStartDate:yyyy-MM-dd} " +
+                        $"(one day after the previous duty end date {lastEndedDuty.DutyEndDate.Value:yyyy-MM-dd}). " +
+                        $"Current start date: {request.DutyStartDate:yyyy-MM-dd}");
+                }
+            }
+
+            // Business Rule: Check if person has any current (open) duties
+            var currentOpenDuty = _context.AstronautDuties
+                .AsNoTracking()
+                .FirstOrDefault(z => z.PersonId == person.Id && z.DutyEndDate == null);
+
+            if (currentOpenDuty != null && request.DutyTitle.ToUpper() != "RETIRED")
+            {
+                // If there's an open duty, the new duty should start the day after we close the current one
+                var expectedStartDate = request.DutyStartDate.AddDays(-1).Date.AddDays(1);
+                if (request.DutyStartDate.Date != expectedStartDate)
+                {
+                    throw new BadHttpRequestException(
+                        $"Person '{request.Name}' has an open duty that will be closed on {request.DutyStartDate.AddDays(-1):yyyy-MM-dd}. " +
+                        $"New duty should start on {request.DutyStartDate:yyyy-MM-dd}.");
+                }
+            }
+
+            // Validate required fields
+            if (string.IsNullOrWhiteSpace(request.Rank))
+                throw new BadHttpRequestException("Rank is required");
+
+            if (string.IsNullOrWhiteSpace(request.DutyTitle))
+                throw new BadHttpRequestException("Duty Title is required");
+
+            if (request.DutyStartDate == default(DateTime))
+                throw new BadHttpRequestException("Duty Start Date is required");
 
             return Task.CompletedTask;
         }
@@ -73,7 +125,7 @@ namespace StargateAPI.Business.Commands
                 astronautDetail.CurrentDutyTitle = request.DutyTitle;
                 astronautDetail.CurrentRank = request.Rank;
                 astronautDetail.CareerStartDate = request.DutyStartDate.Date;
-                if (request.DutyTitle == "RETIRED")
+                if (request.DutyTitle.ToUpper() == "RETIRED")
                 {
                     // Set career end date to one day before retired duty start date (same as duty end dates)
                     astronautDetail.CareerEndDate = request.DutyStartDate.AddDays(-1).Date;
@@ -86,7 +138,7 @@ namespace StargateAPI.Business.Commands
             {
                 astronautDetail.CurrentDutyTitle = request.DutyTitle;
                 astronautDetail.CurrentRank = request.Rank;
-                if (request.DutyTitle == "RETIRED")
+                if (request.DutyTitle.ToUpper() == "RETIRED")
                 {
                     // Set career end date to one day before retired duty start date (same as duty end dates)
                     astronautDetail.CareerEndDate = request.DutyStartDate.AddDays(-1).Date;
@@ -95,7 +147,7 @@ namespace StargateAPI.Business.Commands
             }
 
             // When adding a RETIRED duty, close all existing open duties for this person
-            if (request.DutyTitle == "RETIRED")
+            if (request.DutyTitle.ToUpper() == "RETIRED")
             {
                 // Get all existing duties for this person that don't have an end date
                 var openDuties = await _context.AstronautDuties
