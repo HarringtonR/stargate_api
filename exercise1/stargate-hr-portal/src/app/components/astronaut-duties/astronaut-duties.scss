@@ -147,6 +147,13 @@
   margin: 10px 0;
 }
 
+.duty-actions {
+  margin-top: 15px;
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
 .loading-container {
   display: flex;
   flex-direction: column;

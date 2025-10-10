@@ -16,10 +16,12 @@ import { MatExpansionModule } from '@angular/material/expansion';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatDialog, MatDialogModule, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { StargateApiService } from '../../services/stargate-api.service';
-import { Person, AstronautDuty } from '../../models/person.model';
+import { Person, AstronautDuty, UpdateAstronautDutyRequest } from '../../models/person.model';
 import { catchError, finalize } from 'rxjs/operators';
 import { of } from 'rxjs';
+import { Inject } from '@angular/core';
 
 @Component({
   selector: 'app-astronaut-duties',
@@ -42,7 +44,8 @@ import { of } from 'rxjs';
     MatExpansionModule,
     MatChipsModule,
     MatDividerModule,
-    MatTooltipModule
+    MatTooltipModule,
+    MatDialogModule
   ],
   templateUrl: './astronaut-duties.html',
   styleUrl: './astronaut-duties.scss'
@@ -84,7 +87,8 @@ export class AstronautDuties implements OnInit {
 
   constructor(
     private apiService: StargateApiService,
-    private snackBar: MatSnackBar
+    private snackBar: MatSnackBar,
+    private dialog: MatDialog
   ) {}
 
   ngOnInit(): void {
@@ -305,5 +309,123 @@ export class AstronautDuties implements OnInit {
     return !!(person.currentRank || person.currentDutyTitle || 
               person.astronautDetail || 
               (person.astronautDuties && person.astronautDuties.length > 0));
+  }
+
+  showEndDateDialog(duty: AstronautDuty): void {
+    const dialogRef = this.dialog.open(EndDateDialogComponent, {
+      width: '400px',
+      data: { duty: duty }
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result && result.endDate) {
+        this.updateDutyEndDate(duty.id, result.endDate);
+      }
+    });
+  }
+
+  private updateDutyEndDate(dutyId: number, endDate: Date): void {
+    this.loading = true;
+    
+    const request: UpdateAstronautDutyRequest = {
+      dutyEndDate: endDate.toISOString().split('T')[0] // Format as YYYY-MM-DD
+    };
+
+    this.apiService.updateAstronautDuty(dutyId, request)
+      .pipe(
+        catchError(err => {
+          console.error('Error updating duty end date:', err);
+          this.snackBar.open('Failed to update duty end date', 'Close', { duration: 3000 });
+          return of(null);
+        }),
+        finalize(() => {
+          this.loading = false;
+        })
+      )
+      .subscribe((response: any) => {
+        if (response && response.success) {
+          this.snackBar.open(
+            response.retirementDutyCreated 
+              ? 'Duty ended and retirement created successfully!' 
+              : 'Duty end date updated successfully!', 
+            'Close', 
+            { duration: 5000 }
+          );
+          
+          // Reload the duties to show the updated information
+          if (this.selectedPerson) {
+            this.loadAstronautDuties(this.selectedPerson.name);
+          }
+        }
+      });
+  }
+}
+
+// End Date Dialog Component
+@Component({
+  selector: 'app-end-date-dialog',
+  template: `
+    <h2 mat-dialog-title>Add End Date</h2>
+    <mat-dialog-content>
+      <p>Add an end date for this duty assignment:</p>
+      <p><strong>{{ data.duty.dutyTitle }}</strong> - {{ data.duty.rank }}</p>
+      <p>Started: {{ formatDateLong(data.duty.dutyStartDate) }}</p>
+      
+      <mat-form-field appearance="outline" style="width: 100%; margin-top: 16px;">
+        <mat-label>End Date</mat-label>
+        <input matInput [matDatepicker]="picker" [(ngModel)]="endDate" [min]="minDate">
+        <mat-datepicker-toggle matIconSuffix [for]="picker"></mat-datepicker-toggle>
+        <mat-datepicker #picker></mat-datepicker>
+        <mat-hint>Date when this duty assignment ends</mat-hint>
+      </mat-form-field>
+      
+      <mat-dialog-actions>
+        <button mat-button (click)="onCancel()">Cancel</button>
+        <button mat-raised-button color="primary" (click)="onConfirm()" [disabled]="!endDate">
+          Add End Date
+        </button>
+      </mat-dialog-actions>
+    </mat-dialog-content>
+  `,
+  standalone: true,
+  imports: [
+    CommonModule,
+    FormsModule,
+    MatDialogModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatDatepickerModule,
+    MatNativeDateModule,
+    MatButtonModule
+  ]
+})
+export class EndDateDialogComponent {
+  endDate: Date | null = null;
+  minDate: Date;
+
+  constructor(
+    public dialogRef: MatDialogRef<EndDateDialogComponent>,
+    @Inject(MAT_DIALOG_DATA) public data: { duty: AstronautDuty }
+  ) {
+    // Set minimum date to the duty start date
+    this.minDate = new Date(data.duty.dutyStartDate);
+  }
+
+  onCancel(): void {
+    this.dialogRef.close();
+  }
+
+  onConfirm(): void {
+    if (this.endDate) {
+      this.dialogRef.close({ endDate: this.endDate });
+    }
+  }
+
+  formatDateLong(dateString: string): string {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
   }
 }

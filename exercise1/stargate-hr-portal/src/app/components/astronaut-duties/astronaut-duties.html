@@ -212,6 +212,16 @@
                         <span class="detail-value">{{ getDutyDuration(duty) }}</span>
                       </div>
                       
+                      <!-- Add End Date functionality for active duties -->
+                      @if (isDutyActive(duty) && duty.dutyTitle !== 'RETIRED') {
+                        <div class="duty-actions">
+                          <button mat-stroked-button color="primary" (click)="showEndDateDialog(duty)">
+                            <mat-icon>schedule</mat-icon>
+                            Add End Date
+                          </button>
+                        </div>
+                      }
+                      
                       <mat-divider class="detail-divider"></mat-divider>
                     </div>
                   </mat-expansion-panel>
