@@ -17,7 +17,9 @@ import {
 })
 export class StargateApiService {
   // private readonly baseUrl = 'https://localhost:7204'; // Updated to match your API URL
-  private readonly baseUrl = 'https://stargate-api-prod.eba-spvrrfv5.us-east-1.elasticbeanstalk.com';
+  // private readonly baseUrl = 'https://stargate-api-prod.eba-spvrrfv5.us-east-1.elasticbeanstalk.com';
+    private readonly baseUrl = 'https://api.rossludeke.com';
+
   private readonly httpOptions = {
     headers: new HttpHeaders({
       'Content-Type': 'application/json'
